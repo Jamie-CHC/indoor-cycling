@@ -911,6 +911,7 @@
         let currentSegmentSeconds = 0; // 當前段落已騎乘秒數
         let loadedScheduleName = '';    // 目前載入的課表名稱
         let savedSchedules = [];        // 使用者自訂儲存的課表陣列
+        let isWorkoutRunning = false;   // 課表影音播放狀態 (播放中為 true)
 
         // 內建經典預設課表
         const defaultSchedules = [
@@ -1275,6 +1276,7 @@
         }
 
         function safePlay() {
+            isWorkoutRunning = true; // 設為播放狀態
             // 播放 YouTube 影片
             try {
                 const ytVidElement = document.getElementById('yt-player-video');
@@ -1315,6 +1317,7 @@
         }
 
         function safePause() {
+            isWorkoutRunning = false; // 設為暫停狀態
             // 暫停 YouTube
             try { if (playerVideo && isVideoReady) playerVideo.pauseVideo(); } catch (e) { }
             try { if (playerAudio && isAudioReady) playerAudio.pauseVideo(); } catch (e) { }
@@ -1988,7 +1991,7 @@
                     updateRiderUI(index);
 
                     if (index === 0 && !isAnyModalOpen()) {
-                        try { if (playerVideo && isVideoReady) playerVideo.pauseVideo(); } catch (e) { }
+                        safePause();
                         resetSpeedToNormal();
                     }
                 }, 2000);
@@ -2048,7 +2051,7 @@
                     updateRiderUI(index);
 
                     if (index === 0 && !isAnyModalOpen()) {
-                        try { if (playerVideo && isVideoReady) playerVideo.pauseVideo(); } catch (e) { }
+                        safePause();
                         resetSpeedToNormal();
                     }
                 }, 2000);
@@ -2151,8 +2154,8 @@
                     globalRaceSeconds++;
                     lbTimer.innerText = formatTime(globalRaceSeconds);
 
-                    // 踩踏時且課表載入時，才累加課表段落時間
-                    if (loadedScheduleName && riders[0] && riders[0].currentRpm > 0 && !isAnyModalOpen()) {
+                    // 當課表載入、處於騎乘中且影音正在播放或有踩踏時，累加課表段落時間
+                    if (loadedScheduleName && !isAnyModalOpen() && (isWorkoutRunning || (riders[0] && riders[0].currentRpm > 0))) {
                         currentSegmentSeconds++;
                         updateTimelineHUD();
                         
